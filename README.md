@@ -65,25 +65,51 @@
 
 #### 完成的学习任务
 
-1. ✅ **安装 Superpowers 插件**
-   - 通过 `/plugin` 命令安装了 `superpowers` 插件
-   - 通过 `/reload-plugins` 命令重新加载插件
-   - 插件加载结果：1 个 plugin、0 个 skills、7 个 agents、1 个 hook、0 个 plugin MCP servers、0 个 plugin LSP servers
+1. ✅ **学习并安装 Superpowers 插件**
+   - **安装方式**：通过 `/plugin` 命令一键安装，`/reload-plugins` 重新加载
+   - **加载结果**：1 个 plugin、7 个 agents、1 个 hook
+   - **Superpowers 是什么**：Claude Code 的社区增强插件，提供了一套完整的多 Agent 协作能力
+   - **提供的 Agent 类型**：
+     | Agent | 用途 | 特点 |
+     |-------|------|------|
+     | `claude` | 通用任务 | 默认 catch-all agent，全工具访问 |
+     | `claude-code-guide` | 使用指南 | 回答 Claude Code 功能、配置、用法问题 |
+     | `evidence-researcher` | 证据研究 | 严谨、来源优先、结构化输出，自带持久化记忆 |
+     | `Explore` | 只读搜索 | 大规模文件/目录/命名规范搜索，只读不修改 |
+     | `general-purpose` | 通用研究 | 复杂多步任务、代码搜索、并行执行 |
+     | `Plan` | 架构设计 | 设计实现方案，识别关键文件，评估架构取舍 |
+     | `statusline-setup` | 状态栏 | 配置 Claude Code 用户界面状态栏 |
+   - **提供的核心能力**：
+     - 🔄 **Workflow 编排系统**：确定性多阶段工作流，支持 pipeline（流水线）和 parallel（并行）模式
+     - 🧠 **Agent 持久化记忆**：每个 agent 可拥有独立的文件记忆系统，跨会话保持上下文
+     - 🛡️ **工作树隔离**：`isolation: "worktree"` 让 agent 在独立 git 分支中工作，互不干扰
+     - 📊 **结构化输出**：通过 JSON Schema 约束 agent 返回格式，确保结果可解析
+     - 🔌 **MCP/LSP 集成**：支持外部工具服务器和语言服务器接入
+   - **学到的 Workflow 质量模式**：
+     - 对抗性验证（Adversarial Verify）：多个独立怀疑者验证每个发现，多数否决则淘汰
+     - 视角多样化验证（Perspective-Diverse Verify）：不同角度（正确性、安全、性能、复现）审查
+     - 评委面板（Judge Panel）：N 次独立尝试，多评委评分，综合最优解
+     - 循环直到干燥（Loop-Until-Dry）：连续 K 轮无新发现则停止，避免遗漏
+     - 多模态扫描（Multi-Modal Sweep）：多 agent 各自盲搜，交叉去重
+     - 完整性批评者（Completeness Critic）：最终检查遗漏的模态、未验证的声明
 
-2. ✅ **学习 Claude Code Agent 系统**
-   - 了解了 Claude Code 内置的多种 Agent 类型：
-     - `claude` - 通用 catch-all agent
-     - `claude-code-guide` - Claude Code 使用指南 agent
-     - `evidence-researcher` - 证据研究 agent（严谨、来源优先的研究者）
-     - `Explore` - 只读搜索 agent，适合大规模文件搜索
-     - `general-purpose` - 通用 agent，用于复杂多步任务
-     - `Plan` - 软件架构师 agent，用于设计实现方案
-     - `statusline-setup` - 状态栏配置 agent
+2. ✅ **学习 Claude Code Agent 系统底层机制**
    - 理解了 Agent 的核心能力：
      - 可以访问所有工具（Read、Edit、Write、Bash、Grep、Glob 等）
-     - 支持后台运行（`run_in_background: true`）
-     - 支持 worktree 隔离（`isolation: "worktree"`）
-     - 支持结构化输出（通过 schema 参数）
+     - 支持后台运行（`run_in_background: true`）：agent 在后台异步完成任务
+     - 支持 worktree 隔离（`isolation: "worktree"`）：在独立 git 分支中工作
+     - 支持结构化输出（通过 schema 参数）：返回值强制符合 JSON Schema
+     - 支持自定义 subagent_type：通过 `.claude/agents/*.md` 定义专用 agent
+   - 理解了 Agent 与主会话的关系：
+     - Agent 的最终文本就是返回值，不直接展示给用户
+     - 主会话通过 `Agent` 工具的结果获取 agent 的输出
+     - 可通过 `SendMessage` 与已有 agent 继续交互
+     - agent 可以在 `worktree` 隔离环境中运行，避免文件冲突
+   - 理解了 Workflow 编排的运行机制：
+     - 脚本是纯 JavaScript（非 TypeScript），在 async 上下文中运行
+     - 内置 `phase()`、`log()`、`parallel()`、`pipeline()` 等编排原语
+     - 支持 `budget` 控制 token 消耗上限
+     - 支持 `resume` 恢复中断的工作流（通过 runId）
 
 3. ✅ **配置自定义 Agent**
    - 创建了 `evidence-researcher` 自定义 agent（位于 `.claude/agents/`）
@@ -140,11 +166,12 @@
      - `ai-hook-lab/.env.local` — API Key 配置（ANTHROPIC_API_KEY / OPENAI_API_KEY / DEEPSEEK_API_KEY）
 
 #### 学到的知识点
-- Claude Code 插件系统：支持安装第三方插件扩展功能
-- Agent 架构：多种专用 agent，各有不同能力和工具访问权限
-- Workflow 编排：确定性多阶段工作流，支持并行和流水线模式
-- 证据研究方法论：严格的来源验证、交叉检查、证据分级体系
-- 自定义 Agent 开发：通过 markdown 文件定义 agent 的行为和输出格式
+- **Superpowers 插件**：一键安装即可获得 7 个预置 Agent + Workflow 编排能力
+- **Agent 架构**：多种专用 agent，各有不同能力和工具访问权限，可通过 `.claude/agents/*.md` 自定义
+- **Workflow 编排**：确定性多阶段工作流，支持并行（parallel）和流水线（pipeline）两种模式
+- **Agent 持久化记忆**：每个 agent 可拥有独立的文件记忆系统，跨会话保持上下文
+- **证据研究方法论**：严格的来源验证、交叉检查、证据分级体系
+- **自定义 Agent 开发**：通过 markdown 文件定义 agent 的行为、工具权限和输出格式
 - **Next.js App Router**：使用 `app/` 目录结构，`layout.tsx` + `page.tsx` 组合
 - **API Route 安全**：API key 放在 `.env.local`，通过 `process.env` 在服务端读取，前端无法访问
 - **多模型适配**：统一接口封装不同 AI SDK（Anthropic SDK / OpenAI SDK / DeepSeek 兼容格式）
@@ -278,6 +305,7 @@ git push origin main
 - [Anthropic SDK (Node.js)](https://docs.anthropic.com/en/api/sdks)
 - [OpenAI SDK (Node.js)](https://platform.openai.com/docs/libraries)
 - [DeepSeek API 文档](https://platform.deepseek.com/api-docs)
+- [Superpowers 插件](https://github.com/anthropics/claude-code-superpowers) — Claude Code 社区增强插件，提供多 Agent 编排能力
 
 ---
 
@@ -300,7 +328,12 @@ git push origin main
    - 自定义 PPTX 模板和样式
    - 学习更多 python-pptx 高级功能
 
-5. ⏳ **完善 AI Hook Lab**
+5. ⏳ **深入实践 Superpowers 插件**
+   - 用 Workflow 编排一个完整的代码审查工作流
+   - 自定义更多 agent 并配置持久化记忆
+   - 实践 agent worktree 隔离模式
+
+6. ⏳ **完善 AI Hook Lab**
    - 添加流式输出（Streaming）支持
    - 添加更多 hook 风格模板
    - 部署到 Vercel
