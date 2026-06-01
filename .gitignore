@@ -39,3 +39,6 @@ Thumbs.db
 # Project specific
 *.pptx
 CustomPPTXSkillClaudeCode/
+
+# Claude Code
+.claude/
